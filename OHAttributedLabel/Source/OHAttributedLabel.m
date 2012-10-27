@@ -51,6 +51,7 @@
 
 
 const int UITextAlignmentJustify = ((UITextAlignment)kCTJustifiedTextAlignment);
+NSString * const OHLinkAttributeName = @"OHLinkAttributeName";
 
 @interface OHAttributedLabel(/* Private */)
 {
@@ -224,7 +225,7 @@ NSDataDetector* sharedReusableDataDetector(NSTextCheckingTypes types)
     
     NSMutableAttributedString* mutAS = [_attributedText mutableCopy];
 	
-    BOOL hasLinkColorSelector = [self.delegate respondsToSelector:@selector(attributedLabel:colorForLink:underlineStyle:)];
+    //BOOL hasLinkColorSelector = [self.delegate respondsToSelector:@selector(attributedLabel:colorForLink:underlineStyle:)];
     
 #if OHATTRIBUTEDLABEL_WARN_ABOUT_OLD_API
     static dispatch_once_t onceToken;
@@ -238,7 +239,7 @@ NSDataDetector* sharedReusableDataDetector(NSTextCheckingTypes types)
     });
 #endif
 
-	NSString* plainText = [_attributedText string];
+	/*NSString* plainText = [_attributedText string];
     
     void (^applyLinkStyle)(NSTextCheckingResult*) = ^(NSTextCheckingResult* result)
     {
@@ -266,7 +267,7 @@ NSDataDetector* sharedReusableDataDetector(NSTextCheckingTypes types)
 	[_customLinks enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop)
 	 {
 		 applyLinkStyle((NSTextCheckingResult*)obj);
-	 }];
+	 }];*/
 
     MRC_RELEASE(_attributedTextWithLinks);
     _attributedTextWithLinks = [[NSAttributedString alloc] initWithAttributedString:mutAS];
@@ -600,6 +601,14 @@ NSDataDetector* sharedReusableDataDetector(NSTextCheckingTypes types)
 	_attributedText = MRC_RETAIN(newText);
 	[self setAccessibilityLabel:_attributedText.string];
 	[self removeAllCustomLinks];
+    
+    [_attributedText enumerateAttribute:OHLinkAttributeName inRange:NSMakeRange(0, [_attributedText.string length]) options:0 usingBlock:^(id value, NSRange range, BOOL *stop) {
+        if (value == nil) {
+            return;
+        }
+        [self addCustomLink:value inRange:range];
+    }];
+    
     [self setNeedsRecomputeLinksInText];
 }
 
